@@ -1,0 +1,25 @@
+<resources>
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="TvHeadTheme">
+        <item name="android:textColor">@color/colorTextHead</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TvUuidAndNameTheme">
+        <item name="android:textColor">@color/colorTextUuid</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TvDefaultTxt">
+        <item name="android:textColor">@color/colorTextHead</item>
+    </style>
+
+</resources>
