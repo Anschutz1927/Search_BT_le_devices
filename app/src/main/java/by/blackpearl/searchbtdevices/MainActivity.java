@@ -24,6 +24,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.firebase.crash.FirebaseCrash;
+
 import java.util.ArrayList;
 
 import by.blackpearl.searchbtdevices.adapters.DevicesAdapter;
@@ -39,11 +41,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ScanSettings mSettings;
     private boolean mIsScanOnProcess = false;
     private DevicesAdapter mDevicesAdapter;
+    private StopSearch mStopSearch = new StopSearch();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        FirebaseCrash.log("App has started...");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions();
@@ -68,9 +73,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initialize() {
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this.getApplicationContext(), "BLE Not Supported!", Toast.LENGTH_SHORT)
+            Toast.makeText(this.getBaseContext(), "BLE Not Supported!", Toast.LENGTH_SHORT)
                     .show();
-            finish();
+//            finish();
         }
         if (Build.VERSION.SDK_INT >= 21) {
             if (mScanCallback == null) {
@@ -100,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onPause() {
         if (mIsScanOnProcess && !isChangingConfigurations()) {
             stopSearchBtLeDevices();
+            mStopSearch.mStart = false;
         }
         super.onPause();
     }
@@ -110,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this.getApplicationContext(), "BT NOT enabled!", Toast.LENGTH_SHORT)
                         .show();
-                finish();
+//                finish();
                 return;
             }
         }
@@ -151,12 +157,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ActivityCompat.requestPermissions(
                 this,
                 new String[]
-                {
-                        Manifest.permission.BLUETOOTH,
-                        Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                },
+                        {
+                                Manifest.permission.BLUETOOTH,
+                                Manifest.permission.BLUETOOTH_ADMIN,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                        },
                 17
         );
     }
@@ -224,16 +230,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startSearchBtLeDevices() {
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this.getBaseContext(), "BLE Not Supported!", Toast.LENGTH_SHORT)
+                    .show();
+            return;
+        }
+        if (mBtAdapter == null || !mBtAdapter.isEnabled()) {
+            Toast.makeText(this.getApplicationContext(), "BT NOT enabled!", Toast.LENGTH_SHORT)
+                    .show();
+            return;
+        }
         if (mIsScanOnProcess) {
             stopSearchBtLeDevices();
         }
         mDevicesAdapter.clearAdapter();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                stopSearchBtLeDevices();
-            }
-        }, TIME_SEARCH_DELAY);
+        new Handler().postDelayed(mStopSearch, TIME_SEARCH_DELAY);
         if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 18) {
             mBtAdapter.startLeScan(mLeScanCallback);
         }
@@ -250,6 +261,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else if (Build.VERSION.SDK_INT >= 21) {
             mBtAdapter.getBluetoothLeScanner().stopScan(mScanCallback);
         }
+        if (mDevicesAdapter.getItemCount() == 0) {
+            Toast.makeText(this, "No devices found.", Toast.LENGTH_SHORT).show();
+        }
         mIsScanOnProcess = false;
     }
 
@@ -262,6 +276,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             savedAdapter = da;
             savedScanClbck = sck;
             savedLeScanClbck = lesck;
+        }
+    }
+
+    private class StopSearch implements Runnable {
+
+        private boolean mStart = true;
+
+        @Override
+        public void run() {
+            if (mStart) {
+                stopSearchBtLeDevices();
+            }
         }
     }
 }

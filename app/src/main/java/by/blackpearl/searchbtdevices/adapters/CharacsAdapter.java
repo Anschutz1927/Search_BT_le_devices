@@ -20,7 +20,9 @@ import by.blackpearl.searchbtdevices.R;
 
 public class CharacsAdapter extends RecyclerView.Adapter<CharacsAdapter.Holder> {
 
-    private static final byte[] DEFAULT_VALUE = {(byte) 0, (byte) 1};
+    private static final String HEX_STR = "83 43 00 FF 01 68 07 E6 5D";
+    private static final byte[] DEFAULT_VALUE = getByteFromString();
+//    private static final byte[] DEFAULT_VALUE = {(byte) 0, (byte) 1};
     private final Callback mCallback;
     private ArrayList<BluetoothGattCharacteristic> mCharacteristics;
 
@@ -64,6 +66,15 @@ public class CharacsAdapter extends RecyclerView.Adapter<CharacsAdapter.Holder> 
     @Override
     public int getItemCount() {
         return mCharacteristics.size();
+    }
+
+    private static byte[] getByteFromString() {
+        String[] hex = HEX_STR.split(" ");
+        byte[] data = new byte[hex.length];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (byte) Integer.parseInt(hex[i], 16);
+        }
+        return data;
     }
 
     static class Holder extends RecyclerView.ViewHolder {
